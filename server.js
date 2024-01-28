@@ -31,6 +31,16 @@ function verifyCallback(accessToken, refreshToken, profile, done) {
 
 passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 
+// Save the session to the cookie
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+// Read the session from the cookie
+passport.deserializeUser((id, done) => {
+    done(null, id);
+});
+
 const app = express();
 
 app.use(helmet());
@@ -42,6 +52,8 @@ app.use(cookieSession({
 }));
 
 app.use((req, res, next) => {
+    // Stub out missing regenerate and save functions.
+    // These don't make sense for client side sessions.
     if (req.session && !req.session.regenerate) {
         req.session.regenerate = (cb) => {
             cb();
@@ -56,6 +68,7 @@ app.use((req, res, next) => {
 })
 
 app.use(passport.initialize());
+app.use(passport.session());
 
 function checkLoggedIn(req, res, next) {
     const isLoggedIn = true; //TODO
@@ -76,7 +89,7 @@ app.get('/auth/google/callback',
     passport.authenticate('google', {
         failureRedirect: '/failure',
         successRedirect: '/',
-        session: false,
+        session: true,
     }),
     (req, res) => {
         console.log('Google called us back!');
