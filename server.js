@@ -41,6 +41,20 @@ app.use(cookieSession({
     keys: [config.COOKIE_KEY_1, config.COOKIE_KEY_2],
 }));
 
+app.use((req, res, next) => {
+    if (req.session && !req.session.regenerate) {
+        req.session.regenerate = (cb) => {
+            cb();
+        };
+    }
+    if (req.session && !req.session.save) {
+        req.session.save = (cb) => {
+            cb();
+        };
+    }
+    next();
+})
+
 app.use(passport.initialize());
 
 function checkLoggedIn(req, res, next) {
